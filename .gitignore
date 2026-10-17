@@ -1,0 +1,31 @@
+# ROMs: never in git
+*.z64
+*.n64
+*.v64
+*.rom
+*.zip.rom
+roms/
+ROMs/
+QuadTubeROMs/
+
+# Build trees and local artifacts
+build/
+build-*/
+out/
+cmake-build-*/
+*.o
+*.a
+*.dylib
+*.app/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Local config and saves that may contain ROM-derived data
+*.sav
+*.eep
+*.srm
+*.fla
+ge007.ini
