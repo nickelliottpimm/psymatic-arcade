@@ -1,4 +1,4 @@
-# QuadTube — Project Instructions
+# Psymatic Arcade — Project Instructions
 
 Paste into a Claude Project as custom instructions. The Claude chat thread is
 for decisions. The Claude Code thread is for building. The GitHub repo is the

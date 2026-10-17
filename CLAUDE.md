@@ -1,4 +1,4 @@
-# CLAUDE.md — QuadTube
+# CLAUDE.md — Psymatic Arcade
 
 Read this and `docs/status.md` at the start of every session.
 

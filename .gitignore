@@ -6,7 +6,7 @@
 *.zip.rom
 roms/
 ROMs/
-QuadTubeROMs/
+PsymaticArcade-ROMs/
 
 # Build trees and local artifacts
 build/
