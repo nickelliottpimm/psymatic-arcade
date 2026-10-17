@@ -1,0 +1,87 @@
+From 379b3ca9b138a742d3586a13e97a8016c2f81bf3 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 17 Oct 2026 16:32:57 +1100
+Subject: [PATCH 1/2] Add Video.Stretch43: stretch the 4:3 image to fill the
+ window
+
+Psymatic Arcade feeds a 16:9 signal to modulators that squeeze it back
+to 4:3. With Video.Stretch43=1 the window aspect reported to the game
+is 4:3, so it lays out a native 4:3 frame (FOV, HUD, menus), while
+RATIO_X/RATIO_Y still scale to the real window: a 4/3 horizontal
+stretch with no pillarbox. Defaults off.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ port/fast3d/gfx_api.h  | 1 +
+ port/fast3d/gfx_pc.cpp | 7 +++++++
+ port/src/video.c       | 3 +++
+ 3 files changed, 11 insertions(+)
+
+diff --git a/port/fast3d/gfx_api.h b/port/fast3d/gfx_api.h
+index 3d9344d..0cfa703 100644
+--- a/port/fast3d/gfx_api.h
++++ b/port/fast3d/gfx_api.h
+@@ -37,6 +37,7 @@ extern struct XYWidthHeight gfx_current_native_viewport; // The internal/native
+ extern float gfx_current_native_aspect; // The aspect ratio of the above mode
+ extern bool gfx_framebuffers_enabled;
+ extern bool gfx_detail_textures_enabled;
++extern bool gfx_stretch43; // report a 4:3 aspect while drawing to the whole window
+ // Video.GpuVertices: meshes under G_MESH_EXT posed and transformed on the GPU (gfxmesh.h)
+ extern bool gfx_gpu_vertices;
+ extern bool gfx_clean_text_outlines;
+diff --git a/port/fast3d/gfx_pc.cpp b/port/fast3d/gfx_pc.cpp
+index 934f4d2..e66cc6d 100644
+--- a/port/fast3d/gfx_pc.cpp
++++ b/port/fast3d/gfx_pc.cpp
+@@ -391,6 +391,7 @@ struct XYWidthHeight gfx_current_native_viewport;
+ float gfx_current_native_aspect = 4.f / 3.f;
+ bool gfx_framebuffers_enabled = true;
+ bool gfx_detail_textures_enabled = true;
++bool gfx_stretch43 = false;
+ bool gfx_clean_text_outlines = true;
+ int gfx_clamped_edge_mode = CLAMPED_EDGE_STRETCH;
+ int gfx_texture_enhance_scale = 1;
+@@ -8576,6 +8577,12 @@ extern "C" void gfx_start_frame(void) {
+ 
+     gfx_current_window_dimensions.aspect_ratio = (float)gfx_current_window_dimensions.width / gfx_current_window_dimensions.height;
+ 
++    if (gfx_stretch43) {
++        // Psymatic Arcade: the game lays out a 4:3 frame and RATIO_X/RATIO_Y stretch it
++        // across the real window, so a 16:9 output carries the 4:3 image stretched 4/3.
++        gfx_current_window_dimensions.aspect_ratio = 4.f / 3.f;
++    }
++
+     gfx_current_dimensions = gfx_current_window_dimensions;
+ 
+     // The render scale: FSR draws the game at a fraction of the window,
+diff --git a/port/src/video.c b/port/src/video.c
+index 7ce1ac8..f15084f 100644
+--- a/port/src/video.c
++++ b/port/src/video.c
+@@ -52,6 +52,7 @@ static s32 vidFullscreen = DEFAULT_VID_FULLSCREEN;
+ static s32 vidFullscreenExclusive = DEFAULT_VID_FULLSCREEN_EXCLUSIVE;
+ static s32 vidMaximize = false;
+ static s32 vidCenter = false;
++static s32 vidStretch43 = false;
+ static s32 vidAllowHiDpi = false;
+ // What the window was made with. HiDPI and framebuffer effects are settled
+ // when the window and renderer are made, so the menu shows a change to either
+@@ -159,6 +160,7 @@ s32 videoInit(void)
+ 	vidFramebuffersActive = vidFramebuffers;
+ 	vidAllowHiDpiActive = vidAllowHiDpi;
+ 	gfx_detail_textures_enabled = (bool)texDetail;
++	gfx_stretch43 = (bool)vidStretch43;
+ 	gfx_gpu_vertices = vidGpuVertices && !sysArgCheck("--cpu-vertices");
+ 	gfx_clamped_edge_mode = texClampedEdge;
+ 	if (vidTaa) {
+@@ -1234,6 +1236,7 @@ PD_CONSTRUCTOR static void videoConfigInit(void)
+ 	configRegisterInt("Video.DefaultHeight", &vidHeight, 0, 32767);
+ 	configRegisterInt("Video.ExclusiveFullscreen", &vidFullscreenExclusive, 0, 1);
+ 	configRegisterInt("Video.CenterWindow", &vidCenter, 0, 1);
++	configRegisterInt("Video.Stretch43", &vidStretch43, 0, 1);
+ 	configRegisterInt("Video.AllowHiDpi", &vidAllowHiDpi, 0, 1);
+ 	configRegisterInt("Video.VSync", &vidVsync, -1, 10);
+ 	configRegisterInt("Video.FramebufferEffects", &vidFramebuffers, 0, 1);
+-- 
+2.39.5 (Apple Git-154)
+

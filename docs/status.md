@@ -1,43 +1,59 @@
 # Status
 
-Last updated: 2026-10-17 (Code session, cloud/Linux, research only)
+Last updated: 2026-10-17 (Code session on the M1 laptop: setup, patches, playtests)
 
 ## Done
 
-- Repo bootstrapped: CLAUDE.md, project instructions, docs skeleton, .gitignore
-  (excludes ROMs and build trees).
-- Chat-thread research logged in `docs/findings.md` (all unverified by build).
-- Decision 0001 recorded: host machines and test laptop.
-- Decision 0002 recorded: GoldenEye candidate order.
-- `laptop-setup.md` was started in a cloud session by mistake. That session
-  is Linux with no Mac and no ROM share, so it did the desk research only.
-  Results are in `docs/findings.md`, under "Checked from source":
-  - SpaghettiKart 1.0.0 ships `spaghetti-mac-arm64.zip`. The repo has no
-    LICENSE file. Last commit 2026-10-11.
-  - goldeneye-pc-port: MIT. Last commit 2026-10-07. No Mac build, and the
-    maintainer says macOS has never been built. 4P is not yet verified
-    upstream.
-  - "GoldenEye Native" identified: seb-patron/goldeneye-native (the original
-    SegfaultEvan repo was deleted). MIT, with Apple Silicon as its primary
-    target and 2-4P split-screen marked done. There is no prebuilt; it
-    builds from source with a Mac installer script.
-  - Perfect Dark port: has a Mac arm64 build (`pd-arm64-osx.tar.xz`). MIT.
-  - Reference ROM hashes recorded for MK64 US, GE US and PD NTSC v1.1 (MD5).
+- ROMs: copied from the share to `~/PsymaticArcade-ROMs`. MK64 US, GE US
+  and PD NTSC v1.1 are all `.z64` and all match the reference hashes. The
+  share path is `/Volumes/01_PRODUCTION/01_PROJECTS/Psymatic2000/...`, not
+  the one in the prompt.
+- All four games are installed under `~/PsymaticArcade-Apps` and launched
+  from `~/Desktop/Psymatic Arcade/*.command`. Copies of the launchers are
+  in `tools/launchers/`. `0 Claude (this project).command` reopens this
+  conversation.
+  - **Mario Kart 64** (SpaghettiKart 1.0.0 arm64): plays. 2 pads work after
+    assigning pad 2 to Port 2 in Esc > Settings > Controller. The 4:3 to
+    16:9 stretch is done by config (`IgnoreAspectCorrection`), and the user
+    confirmed it on the wall.
+  - **GoldenEye** (seb-patron/goldeneye-native, built from source): plays
+    2P on the wall, and the user reports it working well. Local branch
+    `psymatic/stretch43` has the stretch toggle, two upstream bug fixes
+    (Library/Basement/Stack crash, MP weapon-cycle hang), C-button
+    thresholds, and an SDL 2.32.10 build.
+  - **Perfect Dark** (fgsfdsfgs port, built from source) and **GoldenEye X**
+    (Dab's Mod v3.14.0, built from source, GE-X 6a imported): both open
+    fullscreen on the CRT (`Video.Display=1`) with `Video.Stretch43=1`. GE-X
+    boots straight into the mod via `--moddir`. Dab's built-in updater is
+    disabled because it had replaced our binary.
+- Pad drift: root cause was an SDL 2.30.9 calibration bug. GoldenEye, PD
+  and Dab's Mod now use SDL 2.32.10. Details in `docs/findings.md`
+  ("Controllers").
+- All port changes are exported to `ports/pending-patches/` (9 commits).
+  Pad and display diagnostic tools are in `tools/pads/`. Upstream bug
+  report drafts are in `docs/upstream-drafts/`.
 
 ## Blocked / unknown
 
-- No build or run has happened yet. Nothing is verified on hardware.
-- ROM inventory not done. It needs the laptop and the mounted share.
-- SpaghettiKart has no license. This must be resolved before forking.
-- goldeneye-pc-port on Apple Silicon: an untested platform upstream.
+- No forks or submodules yet. This needs `gh` installed and logged in by
+  the user, plus their choice of GitHub account. Until then the patches
+  live in local clones and `ports/pending-patches/`.
+- SpaghettiKart still has no license. Do not fork until that is resolved.
+- PD and GE-X with the new N64 pad layout (`tools/pads/pd_n64pads.py`:
+  SwapSticks=0, StickCButtons=1, Z fire, R aim) are not yet playtested.
+- GE-X multiplayer menu flow is not yet walked through on screen.
+- SpaghettiKart's per-port pad assignment resets each launch (libultraship
+  keeps the ignore list in memory only).
+- goldeneye-pc-port was not attempted (GoldenEye Native works). Decision
+  0002 needs revisiting.
 
 ## Next
 
-1. Run `docs/prompts/laptop-setup.md` in Claude Code on the M1 laptop itself.
-   Steps 2 and 3 can skip the research already in `docs/findings.md`.
-2. Step 2: use the `spaghetti-mac-arm64.zip` asset from release 1.0.0.
-3. Step 3: suggested order on the Mac is seb-patron/goldeneye-native first
-   (Mac is its primary target), then a time-boxed attempt at
-   goldeneye-pc-port. Pass the ROM with `--rom ~/PsymaticArcade-ROMs/...`.
-   Read `tools/install.sh` before running it. Revisit decision 0002 after.
-4. Log playtest observations in `docs/playtest-notes.md`.
+1. Playtest PD and GE-X 2P with the new pad layout. To walk through
+   GE-X's "Virtual Reality" menus, Claude can screenshot the CRT with
+   `screencapture -x -D 2`.
+2. Install `gh`, log in, choose the account, then fork the three ports,
+   push `psymatic/stretch43`, and add them as submodules under `ports/`.
+3. Decide whether to post the upstream drafts.
+4. Write playtest observations into `docs/playtest-notes.md`.
+5. Then: the quadrant menu mirror and the 4P layout work from the brief.

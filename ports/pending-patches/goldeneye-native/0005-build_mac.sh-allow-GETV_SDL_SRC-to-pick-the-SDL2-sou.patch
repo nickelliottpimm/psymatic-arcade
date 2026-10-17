@@ -1,0 +1,35 @@
+From 8e0d6542293fa759ed39de2f260f5538325d7606 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 17 Oct 2026 18:15:36 +1100
+Subject: [PATCH 5/5] build_mac.sh: allow GETV_SDL_SRC to pick the SDL2 source
+ tree
+
+SDL 2.30.9's HIDAPI Switch driver maps each stick axis linearly over
+the widest travel seen so far, so a pad with uneven travel rests off
+centre and the offset moves as new extremes arrive: drift that
+changes direction during play and in menus. 2.32.10 maps each side of
+centre separately. Unset keeps deps/SDL2-2.30.9.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ getv/build_mac.sh | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/getv/build_mac.sh b/getv/build_mac.sh
+index 6a0e232..b7be3c4 100755
+--- a/getv/build_mac.sh
++++ b/getv/build_mac.sh
+@@ -84,7 +84,9 @@ if [ -f "$IMGUI/lib/libimgui.a" ] && [ -f "$IMGUI/include/imgui.h" ]; then
+   IMGUIFLAGS=( -DGE_WITH_IMGUI -I "$IMGUI/include" )
+   IMGUILIBS=( "$IMGUI/lib/libimgui.a" )
+ fi
+-SDLSRC="$HERE/../deps/SDL2-2.30.9"
++# GETV_SDL_SRC: build a different SDL2 source tree (e.g. 2.32.10, whose Switch driver
++# calibrates each side of centre separately; 2.30.9 drifts on pads with uneven travel).
++SDLSRC="${GETV_SDL_SRC:-$HERE/../deps/SDL2-2.30.9}"
+ SDK="$(xcrun -sdk macosx --show-sdk-path)"
+ # Host-arch detection: the game/renderer layer has no arm64-specific code (see
+ # docs/PORTING.md), so x86_64 Macs build too. The only real arch dependency is the
+-- 
+2.39.5 (Apple Git-154)
+

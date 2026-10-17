@@ -1,0 +1,65 @@
+From 81a98954b0b68e6da2d88d5f8fb5d6c268d91ce2 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 17 Oct 2026 18:00:45 +1100
+Subject: [PATCH 4/5] Add GETV_C_ON/GETV_C_OFF to tune the right-stick C-button
+ thresholds
+
+N64-style USB clones that report as a Switch Pro carry their digital C
+buttons on the right stick, and SDL's HIDAPI Switch driver applies Pro
+calibration to them, so they rest off centre: rx +8478, ry -8054 or
++4398 depending on the last press (measured on two pads). The default
+release threshold is 8000, so after one press a C direction stays
+latched and the view drifts or stares at the ceiling. Both thresholds
+are now overridable; unset keeps 12000/8000.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ getv/port/src/port_os.c | 28 ++++++++++++++++++++++++++--
+ 1 file changed, 26 insertions(+), 2 deletions(-)
+
+diff --git a/getv/port/src/port_os.c b/getv/port/src/port_os.c
+index 3169243..d777289 100644
+--- a/getv/port/src/port_os.c
++++ b/getv/port/src/port_os.c
+@@ -662,12 +662,36 @@ static s8 geStick(int v)
+ #define GE_C_ON   12000
+ #define GE_C_OFF   8000
+ 
++/* GETV_C_ON / GETV_C_OFF override the two thresholds (SDL axis counts, 1..32767, OFF < ON).
++ * Some pads rest well off centre on the right stick: N64-style USB clones that report as a
++ * Switch Pro send their digital C buttons through SDL's Pro calibration and park at up to
++ * ~8500 counts, above GE_C_OFF, so a C direction latches on after one press and the view
++ * drifts. Unset keeps the defaults above. */
++static void geCThresholds(int *on, int *off)
++{
++    static int con = -1, coff = -1;
++    if (con < 0) {
++        const char *e1 = getenv("GETV_C_ON"), *e2 = getenv("GETV_C_OFF");
++        int a = (e1 && *e1) ? atoi(e1) : GE_C_ON;
++        int b = (e2 && *e2) ? atoi(e2) : GE_C_OFF;
++        if (a < 1 || a > GE_SDL_AXIS_MAX || b < 1 || b >= a) { a = GE_C_ON; b = GE_C_OFF; }
++        con = a; coff = b;
++        if (a != GE_C_ON || b != GE_C_OFF) {
++            printf("[getv] input: C-button thresholds on=%d off=%d\n", con, coff);
++            fflush(stdout);
++        }
++    }
++    *on = con; *off = coff;
++}
++
+ static int geCEdge(int v, int *held)
+ {
++    int on, off;
++    geCThresholds(&on, &off);
+     if (*held) {
+-        if (v < GE_C_OFF) { *held = 0; }
++        if (v < off) { *held = 0; }
+     } else {
+-        if (v > GE_C_ON)  { *held = 1; }
++        if (v > on)  { *held = 1; }
+     }
+     return *held;
+ }
+-- 
+2.39.5 (Apple Git-154)
+

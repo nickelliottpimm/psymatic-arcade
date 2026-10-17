@@ -1,0 +1,94 @@
+From 6c9da67a51fd58b53917e2d497812591ad4bb37c Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 17 Oct 2026 18:28:08 +1100
+Subject: [PATCH 2/2] Add Video.Display: open the window on a chosen display
+
+The window was always created at SDL_WINDOWPOS_UNDEFINED, i.e. on the
+main display, so reaching another output meant dragging it there.
+Video.Display=<n> (SDL display index) creates it centred on display n,
+so DefaultFullscreen=1 goes fullscreen there. -1 (default) keeps the
+old placement; an index past the last display logs and falls back.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ port/fast3d/gfx_api.h    |  3 ++-
+ port/fast3d/gfx_sdl2.cpp | 13 +++++++++++++
+ port/src/video.c         |  3 +++
+ 3 files changed, 18 insertions(+), 1 deletion(-)
+
+diff --git a/port/fast3d/gfx_api.h b/port/fast3d/gfx_api.h
+index 0cfa703..c3f53e3 100644
+--- a/port/fast3d/gfx_api.h
++++ b/port/fast3d/gfx_api.h
+@@ -37,7 +37,8 @@ extern struct XYWidthHeight gfx_current_native_viewport; // The internal/native
+ extern float gfx_current_native_aspect; // The aspect ratio of the above mode
+ extern bool gfx_framebuffers_enabled;
+ extern bool gfx_detail_textures_enabled;
+-extern bool gfx_stretch43; // report a 4:3 aspect while drawing to the whole window
++extern bool gfx_stretch43;
++extern int gfx_display_index; // -1: default placement; >= 0: open on this SDL display // report a 4:3 aspect while drawing to the whole window
+ // Video.GpuVertices: meshes under G_MESH_EXT posed and transformed on the GPU (gfxmesh.h)
+ extern bool gfx_gpu_vertices;
+ extern bool gfx_clean_text_outlines;
+diff --git a/port/fast3d/gfx_sdl2.cpp b/port/fast3d/gfx_sdl2.cpp
+index ef19bda..59ad24b 100644
+--- a/port/fast3d/gfx_sdl2.cpp
++++ b/port/fast3d/gfx_sdl2.cpp
+@@ -27,6 +27,7 @@ extern "C" int gfx_sdl_vulkan_headless(void);
+ // OTRTODO: These are redundant. Info can be queried from SDL.
+ static int window_width = DESIRED_SCREEN_WIDTH;
+ static int window_height = DESIRED_SCREEN_HEIGHT;
++int gfx_display_index = -1;
+ static uint32_t fullscreen_flag = SDL_WINDOW_FULLSCREEN_DESKTOP;
+ static bool fullscreen_state;
+ static bool maximized_state;
+@@ -157,6 +158,18 @@ static void gfx_sdl_init(const struct GfxWindowInitSettings *set) {
+         posY = mode.h / 2 - window_height / 2;
+     }
+ 
++    // Psymatic Arcade: Video.Display picks the monitor, so the game can open (and go
++    // fullscreen) on an output other than the main display without dragging the window.
++    if (gfx_display_index >= 0) {
++        if (gfx_display_index < SDL_GetNumVideoDisplays()) {
++            posX = SDL_WINDOWPOS_CENTERED_DISPLAY(gfx_display_index);
++            posY = SDL_WINDOWPOS_CENTERED_DISPLAY(gfx_display_index);
++        } else {
++            fprintf(stderr, "Video.Display=%d but only %d display(s); using the default\n",
++                    gfx_display_index, SDL_GetNumVideoDisplays());
++        }
++    }
++
+     if (set->fullscreen_is_exclusive) {
+         fullscreen_flag = SDL_WINDOW_FULLSCREEN;
+     }
+diff --git a/port/src/video.c b/port/src/video.c
+index f15084f..3bc191f 100644
+--- a/port/src/video.c
++++ b/port/src/video.c
+@@ -53,6 +53,7 @@ static s32 vidFullscreenExclusive = DEFAULT_VID_FULLSCREEN_EXCLUSIVE;
+ static s32 vidMaximize = false;
+ static s32 vidCenter = false;
+ static s32 vidStretch43 = false;
++static s32 vidDisplay = -1;
+ static s32 vidAllowHiDpi = false;
+ // What the window was made with. HiDPI and framebuffer effects are settled
+ // when the window and renderer are made, so the menu shows a change to either
+@@ -161,6 +162,7 @@ s32 videoInit(void)
+ 	vidAllowHiDpiActive = vidAllowHiDpi;
+ 	gfx_detail_textures_enabled = (bool)texDetail;
+ 	gfx_stretch43 = (bool)vidStretch43;
++	gfx_display_index = vidDisplay;
+ 	gfx_gpu_vertices = vidGpuVertices && !sysArgCheck("--cpu-vertices");
+ 	gfx_clamped_edge_mode = texClampedEdge;
+ 	if (vidTaa) {
+@@ -1237,6 +1239,7 @@ PD_CONSTRUCTOR static void videoConfigInit(void)
+ 	configRegisterInt("Video.ExclusiveFullscreen", &vidFullscreenExclusive, 0, 1);
+ 	configRegisterInt("Video.CenterWindow", &vidCenter, 0, 1);
+ 	configRegisterInt("Video.Stretch43", &vidStretch43, 0, 1);
++	configRegisterInt("Video.Display", &vidDisplay, -1, 15);
+ 	configRegisterInt("Video.AllowHiDpi", &vidAllowHiDpi, 0, 1);
+ 	configRegisterInt("Video.VSync", &vidVsync, -1, 10);
+ 	configRegisterInt("Video.FramebufferEffects", &vidFramebuffers, 0, 1);
+-- 
+2.39.5 (Apple Git-154)
+

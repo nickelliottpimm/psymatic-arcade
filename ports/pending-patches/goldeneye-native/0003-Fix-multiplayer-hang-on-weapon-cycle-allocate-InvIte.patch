@@ -1,0 +1,50 @@
+From 87b5fa64384172a305d32b6d9b3f37c757925353 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 17 Oct 2026 17:43:40 +1100
+Subject: [PATCH 3/5] Fix multiplayer hang on weapon cycle: allocate InvItem at
+ native size
+
+alloc_additional_item_slots() sizes p_itemcur as equipmaxitems * 0x14,
+the N64 sizeof(InvItem). Natively next/prev are 8-byte pointers and the
+struct is 32 bytes, so each player's array overruns into the next
+MEMPOOL_STAGE allocation. In multiplayer that is the next player's
+inventory: the item rings get cross-linked, and bondinvCycleForward()
+loops forever over free (type -1) slots that never reach
+ptr_inventory_first_in_cycle. Seen live on Basement 2P: main thread
+pinned in bondinvCycleForward via advance_through_inventory, ring of
+two type -1 items pointing at each other. Use sizeof(InvItem).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ getv/patches/0034-invitem-native-size.patch | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+ create mode 100644 getv/patches/0034-invitem-native-size.patch
+
+diff --git a/getv/patches/0034-invitem-native-size.patch b/getv/patches/0034-invitem-native-size.patch
+new file mode 100644
+index 0000000..132cbf0
+--- /dev/null
++++ b/getv/patches/0034-invitem-native-size.patch
+@@ -0,0 +1,19 @@
++diff --git a/src/game/inititemslots.c b/src/game/inititemslots.c
++index fd7c6a5..bde0b34 100644
++--- a/src/game/inititemslots.c
+++++ b/src/game/inititemslots.c
++@@ -16,6 +16,14 @@ void reinit_gunheld_totaltime(void) {
++ 
++ void alloc_additional_item_slots(s32 additionalentries) {
++   g_CurrentPlayer->equipmaxitems = additionalentries + 0x1e;
+++#ifdef GE_PORT_NATIVE
+++    /* 0x14 is sizeof(InvItem) on the N64. Natively next/prev are 8-byte pointers and the
+++     * struct is 32 bytes, so the original size under-allocates by 60%: each player's array
+++     * runs into the next allocation (in multiplayer, the next player's inventory), which
+++     * corrupts the item rings and leaves bondinvCycleForward() spinning forever. */
+++    g_CurrentPlayer->p_itemcur     = mempAllocBytesInBank((g_CurrentPlayer->equipmaxitems * sizeof(InvItem) + 0xfU | 0xf) ^ 0xf, MEMPOOL_STAGE);
+++#else
++     g_CurrentPlayer->p_itemcur     = mempAllocBytesInBank((g_CurrentPlayer->equipmaxitems * 0x14 + 0xfU | 0xf) ^ 0xf, MEMPOOL_STAGE);
+++#endif
++   bondinvReinitInv();
++ }
+-- 
+2.39.5 (Apple Git-154)
+
