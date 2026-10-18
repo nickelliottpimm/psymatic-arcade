@@ -55,3 +55,17 @@ Last updated: 2026-10-18 (Code session on the M1 laptop: setup, patches, playtes
 3. Decide whether to post the upstream drafts.
 4. Write playtest observations into `docs/playtest-notes.md`.
 5. Then: the quadrant menu mirror and the 4P layout work from the brief.
+
+## Ideas from the user (2026-10-18), not started
+
+- Pad re-pair changes player number. Likely cause: both pads report the
+  same VID/PID/serial, so on reconnect a game can only order them by
+  connection time. Lead to audit: the HID device path encodes the USB
+  port, which could pin pad N to the physical socket N. Also check
+  whether the pads' sleep timer can be held off by host output reports.
+- Mario Kart 64: early experiment, 4 humans + AI opponents in Grand Prix
+  (already the brief's first target).
+- Exhibition launcher: first choice is number of players, then jump
+  straight to each game's character select, skipping title menus. Quit
+  back to the launcher with one button combo.
+- GoldenEye X is the preferred GoldenEye; Native stays for purists.
