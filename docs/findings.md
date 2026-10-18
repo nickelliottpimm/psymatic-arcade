@@ -426,3 +426,35 @@ N64 pads that reads as "C buttons move, stick looks", and Combat Sim /
 Virtual Reality has no menu to change it. Set to 0 for all four players
 in both pd.ini files; mode then defaults to 1.1 (`mplayer.c:438`).
 `tools/pads/pd_n64pads.py` now does this too. Not yet playtested.
+
+## MK64: CPU racers with 3-4 humans (audit, 2026-10-18)
+
+Source: HarbourMasters/SpaghettiKart tag `1.0.0` (`1732542`), shallow clone
+at `~/PsymaticArcade-Apps/src/spaghettikart`. Audit only, nothing built.
+
+- No existing option. Enhancements > Rulesets (`src/port/ui/PortMenu.cpp:433-505`)
+  has items, Thwomps, bomb karts, trophies, traffic; nothing for CPU racers.
+- Menu: 3P/4P only offer VERSUS and BATTLE.
+  `src/menus.c:124-129` `gGameModePlayerSelection`, `:104`
+  `gPlayerModeSelection = {1,2,1,1}` (columns per player count),
+  `:116-121` sub-option columns. Text drawn in `src/menu_items.c:9596`.
+- Spawn: 4P versus is `func_8003B870` (`src/spawn_players.c:805-826`).
+  Slots 5-8 are spawned as `PLAYER_START_SEQUENCE | PLAYER_CPU` without
+  `PLAYER_EXISTS`, so they are inactive. 2P GP (`:643-702`) is the model
+  for active CPUs: `PLAYER_EXISTS | PLAYER_CPU | PLAYER_START_SEQUENCE`
+  with characters picked to avoid the humans' (`cpu_forTwoPlayer`).
+  Grid positions for slots 5-8 in 4P come from `D_80165210/D_80165230`;
+  slot 8 reuses grid 0, so new grid spots will be needed.
+- Rendering: `load_kart_textures` loads only 4 karts per screen in 3P/4P
+  (`src/spawn_players.c:1361-1370`, `playerCounts = {8,8,4,4}`). CPU karts
+  would draw with missing textures unless raised to 8.
+- Ranking: `src/code_80005FD0.c:736-747` ranks `NUM_PLAYERS` in GP but only
+  `gPlayerCount` in VERSUS, so CPUs would not be placed in versus.
+- Other 3P/4P gates seen: Kalimari paddle boat off for `gPlayerCount >= 3`
+  (`code_80005FD0.c:4765`), CPU rival pick GP-only (`:3434-3460`).
+  44 other `gPlayerCount`/`gPlayerCountSelection1` comparisons outside the
+  menus still need a pass.
+- Build: `docs/BUILDING.md:187-` (macOS: Xcode tools plus brew sdl2, libpng,
+  glew, ninja, cmake, nlohmann-json, libzip, vorbis-tools, sdl2_net,
+  tinyxml2; `git submodule update --init` for libultraship and torch).
+- Licence: still none, so patches stay local (no fork).
