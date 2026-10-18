@@ -458,3 +458,23 @@ at `~/PsymaticArcade-Apps/src/spaghettikart`. Audit only, nothing built.
   glew, ninja, cmake, nlohmann-json, libzip, vorbis-tools, sdl2_net,
   tinyxml2; `git submodule update --init` for libultraship and torch).
 - Licence: still none, so patches stay local (no fork).
+
+## MK64: CPU racers in 3P/4P versus (built, 2026-10-18)
+
+- Patch `ports/pending-patches/spaghettikart/0001-*.patch` on tag `1.0.0`,
+  local branch `psymatic/cpu-racers` (`33884a8`). Toggle: CVar
+  `gPsyCpuRacers` (Esc > Enhancements > Rulesets > "CPU Racers in 3P/4P
+  Versus"), default off. Rebuild with `tools/build-spaghettikart.sh`.
+- Changes: CPU slots spawn with `PLAYER_EXISTS` on a second grid row
+  (z + 0x46) with characters the humans did not pick; versus ranks all 8;
+  render loops and per-screen effect passes cover 8 karts in 3P/4P;
+  `gEncodedKartTexture` and `arraySize8` widened from `[2][2][8]` to
+  `[2][4][8]` so each screen gets its own slots; the versus finish logic
+  counts human finishing order and picks the last unfinished human as
+  the loser.
+- Builds cleanly (Release, AppleClang 17). Boots for 25 s with no errors.
+  Not yet raced: needs a 4P versus playtest.
+- This build links Homebrew's `sdl2-compat` (SDL3 underneath), unlike the
+  release binary (static SDL 2.30.9). Watch pad behaviour.
+- Installed at `~/PsymaticArcade-Apps/spaghettikart-cpu` with the toggle
+  on; launcher `1b Mario Kart 64 + CPU Racers (test).command`.

@@ -1,0 +1,370 @@
+From 33884a8b2faccc4b090d4c87441a773c116d980f Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 18 Oct 2026 17:27:50 +1100
+Subject: [PATCH] Add CPU racers to 3P/4P versus (CVar gPsyCpuRacers, default
+ off)
+
+Spawns slots 5-8 (4P) or 4-8 (3P) as CPUs on a second grid row, picks
+characters the humans did not, ranks all 8 karts, renders 8 karts per
+3P/4P screen (gEncodedKartTexture widened to 4 screens), and ends the
+race on the humans' finishing order.
+---
+ src/buffers.h            |  4 +--
+ src/buffers/buffers.c    |  3 +-
+ src/code_80005FD0.c      |  4 +--
+ src/port/ui/PortMenu.cpp |  4 +++
+ src/racing/race_logic.c  | 20 ++++++++++++--
+ src/render_player.c      | 33 ++++++++++++++++------
+ src/spawn_players.c      | 59 +++++++++++++++++++++++++++++++++++++++-
+ src/spawn_players.h      |  1 +
+ 8 files changed, 112 insertions(+), 16 deletions(-)
+
+diff --git a/src/buffers.h b/src/buffers.h
+index 64bf2ce..9c559e9 100644
+--- a/src/buffers.h
++++ b/src/buffers.h
+@@ -28,7 +28,7 @@ typedef struct {
+  */
+ typedef union {
+     struct_D_802BFB80_4 arraySize4[2][2][4];
+-    struct_D_802BFB80_8 arraySize8[2][2][8];
++    struct_D_802BFB80_8 arraySize8[2][4][8]; // Psymatic: 4 screens (was [2][2][8])
+ } union_D_802BFB80;
+ 
+ /*
+@@ -70,7 +70,7 @@ typedef struct {
+ extern u16 gRandomSeed16;
+ extern u8 randomSeedPadding[216];
+ extern union_D_802BFB80 D_802BFB80;
+-extern struct_D_802DFB80 gEncodedKartTexture[][2][8];
++extern struct_D_802DFB80 gEncodedKartTexture[][4][8];
+ 
+ /**
+  * It would be nice to define gPlayerPalettesList as "struct_D_802F1F80 gPlayerPalettesList[2][4][8]".
+diff --git a/src/buffers/buffers.c b/src/buffers/buffers.c
+index 9a2f34e..3779bf0 100644
+--- a/src/buffers/buffers.c
++++ b/src/buffers/buffers.c
+@@ -8,7 +8,8 @@
+  */
+ ALIGNED8 union_D_802BFB80 D_802BFB80;
+ // [nothing][screen][player]
+-ALIGNED8 struct_D_802DFB80 gEncodedKartTexture[2][2][8];
++// Psymatic: 4 screens (was [2][2][8]); the old 3P/4P slot remapping still fits when CPU racers are off
++ALIGNED8 struct_D_802DFB80 gEncodedKartTexture[2][4][8];
+ #ifdef AVOID_UB
+ // [buffer][screen][player] Buffer might be two separate buffers or something?
+ ALIGNED8 struct_D_802F1F80 gPlayerPalettesList[2][4][8];
+diff --git a/src/code_80005FD0.c b/src/code_80005FD0.c
+index 5949b58..f30e78f 100644
+--- a/src/code_80005FD0.c
++++ b/src/code_80005FD0.c
+@@ -742,7 +742,7 @@ void set_places(void) {
+             var_t4 = NUM_PLAYERS;
+             break;
+         case VERSUS:
+-            var_t4 = gPlayerCount;
++            var_t4 = psy_cpu_racers_active() ? NUM_PLAYERS : gPlayerCount;
+             break;
+     }
+ 
+@@ -832,7 +832,7 @@ void update_player_rankings(void) {
+             var_a2 = 8;
+             break;
+         case VERSUS:
+-            var_a2 = gPlayerCount;
++            var_a2 = psy_cpu_racers_active() ? NUM_PLAYERS : gPlayerCount;
+             break;
+     }
+ 
+diff --git a/src/port/ui/PortMenu.cpp b/src/port/ui/PortMenu.cpp
+index 09a115e..4934024 100644
+--- a/src/port/ui/PortMenu.cpp
++++ b/src/port/ui/PortMenu.cpp
+@@ -449,6 +449,10 @@ void PortMenu::AddRulesets() {
+         .CVar("gDisableItemboxes")
+         .Options(CheckboxOptions().Tooltip(
+             "Prevents Itemboxes from spawning"));
++    AddWidget(path, "CPU Racers in 3P/4P Versus", WIDGET_CVAR_CHECKBOX)
++        .CVar("gPsyCpuRacers")
++        .Options(CheckboxOptions().Tooltip(
++            "Fills the empty 3P/4P versus slots with CPU racers (Psymatic)"));
+     AddWidget(path, "All Thwomps are Marty", WIDGET_CVAR_CHECKBOX)
+         .CVar("gAllThwompsAreMarty")
+         .Options(CheckboxOptions().Tooltip(
+diff --git a/src/racing/race_logic.c b/src/racing/race_logic.c
+index ff95ecc..59e4355 100644
+--- a/src/racing/race_logic.c
++++ b/src/racing/race_logic.c
+@@ -519,6 +519,22 @@ void func_8028EF28(void) {
+                     }
+ 
+                     if (gModeSelection == VERSUS) {
++                        s32 psyLastHuman = -1;
++                        if (psy_cpu_racers_active()) {
++                            // Rank among humans only, so CPUs cannot keep the race from ending
++                            s32 j;
++                            currentPosition = 0;
++                            for (j = 0; j < gPlayerCountSelection1; j++) {
++                                if (j == i) {
++                                    continue;
++                                }
++                                if (gPlayers[j].type & PLAYER_CINEMATIC_MODE) {
++                                    currentPosition++;
++                                } else {
++                                    psyLastHuman = j;
++                                }
++                            }
++                        }
+                         D_802BA038 = 180;
+                         if (currentPosition == 0) {
+                             gPlayerWinningIndex = i;
+@@ -546,7 +562,7 @@ void func_8028EF28(void) {
+                                 }
+                                 if (currentPosition == 1) {
+                                     gRaceState = RACE_FINISHED;
+-                                    i = gPlayerPositionLUT[2];
++                                    i = (psyLastHuman >= 0) ? psyLastHuman : gPlayerPositionLUT[2];
+                                     *(gNmiUnknown2 + i * 3 + 2) += 1;
+                                     if (*(gNmiUnknown2 + i * 3 + 2) > 99) {
+                                         *(gNmiUnknown2 + i * 3 + 2) = 99;
+@@ -565,7 +581,7 @@ void func_8028EF28(void) {
+                                 }
+                                 if (currentPosition == 2) {
+                                     gRaceState = RACE_FINISHED;
+-                                    i = gPlayerPositionLUT[3];
++                                    i = (psyLastHuman >= 0) ? psyLastHuman : gPlayerPositionLUT[3];
+                                     gPlayers[i].triggers |= SPINOUT_TRIGGER;
+                                     gPlayers[i].type |= PLAYER_CPU;
+                                     func_800CA118((u8) i);
+diff --git a/src/render_player.c b/src/render_player.c
+index 2aa5bdb..935f85b 100644
+--- a/src/render_player.c
++++ b/src/render_player.c
+@@ -285,6 +285,11 @@ void load_kart_texture_and_render_kart_particles(s32 screenIdx) {
+     s32 screenOffset = (screenIdx >= 2) ? -2: 0;
+     s32 playerOffset = (screenIdx >= 2) ? 4 : 0;
+ 
++    if (psy_cpu_racers_active()) {
++        screenOffset = 0;
++        playerOffset = 0;
++    }
++
+     load_kart_texture_non_blocking(
+         gPlayersToRenderPlayer[0],
+         gPlayersToRenderPlayerId[0] + playerOffset,
+@@ -355,7 +360,7 @@ void render_players(Camera* camera, s32 screenIdx) {
+     init_render_player(gPlayerTwo, camera, PLAYER_TWO, screenIdx);
+     init_render_player(gPlayerThree, camera, PLAYER_THREE, screenIdx);
+     init_render_player(gPlayerFour, camera, PLAYER_FOUR, screenIdx);
+-    if (gActiveScreenMode != SCREEN_MODE_3P_4P_SPLITSCREEN) {
++    if ((gActiveScreenMode != SCREEN_MODE_3P_4P_SPLITSCREEN) || psy_cpu_racers_active()) {
+         init_render_player(gPlayerFive, camera, PLAYER_FIVE, screenIdx);
+         init_render_player(gPlayerSix, camera, PLAYER_SIX, screenIdx);
+         init_render_player(gPlayerSeven, camera, PLAYER_SEVEN, screenIdx);
+@@ -371,7 +376,7 @@ void render_players(Camera* camera, s32 screenIdx) {
+     try_rendering_player(gPlayerTwo, PLAYER_TWO, screenIdx);
+     try_rendering_player(gPlayerThree, PLAYER_THREE, screenIdx);
+     try_rendering_player(gPlayerFour, PLAYER_FOUR, screenIdx);
+-    if (gActiveScreenMode != SCREEN_MODE_3P_4P_SPLITSCREEN) {
++    if ((gActiveScreenMode != SCREEN_MODE_3P_4P_SPLITSCREEN) || psy_cpu_racers_active()) {
+         try_rendering_player(gPlayerFive, PLAYER_FIVE, screenIdx);
+         try_rendering_player(gPlayerSix, PLAYER_SIX, screenIdx);
+         try_rendering_player(gPlayerSeven, PLAYER_SEVEN, screenIdx);
+@@ -384,7 +389,7 @@ void render_players(Camera* camera, s32 screenIdx) {
+     render_kart_particles(gPlayerTwo, PLAYER_TWO, screenIdx);
+     render_kart_particles(gPlayerThree, PLAYER_THREE, screenIdx);
+     render_kart_particles(gPlayerFour, PLAYER_FOUR, screenIdx);
+-    if (gActiveScreenMode != SCREEN_MODE_3P_4P_SPLITSCREEN) {
++    if ((gActiveScreenMode != SCREEN_MODE_3P_4P_SPLITSCREEN) || psy_cpu_racers_active()) {
+         render_kart_particles(gPlayerFive, PLAYER_FIVE, screenIdx);
+         render_kart_particles(gPlayerSix, PLAYER_SIX, screenIdx);
+         render_kart_particles(gPlayerSeven, PLAYER_SEVEN, screenIdx);
+@@ -545,7 +550,7 @@ void func_80021B0C(void) {
+     func_8006E7CC(gPlayerTwo, 1, 0);
+     func_8006E7CC(gPlayerThree, 2, 0);
+     func_8006E7CC(gPlayerFour, 3, 0);
+-    if (gActiveScreenMode != SCREEN_MODE_3P_4P_SPLITSCREEN) {
++    if ((gActiveScreenMode != SCREEN_MODE_3P_4P_SPLITSCREEN) || psy_cpu_racers_active()) {
+         func_8006E7CC(gPlayerFive, 4, 0);
+         func_8006E7CC(gPlayerSix, 5, 0);
+         func_8006E7CC(gPlayerSeven, 6, 0);
+@@ -572,7 +577,7 @@ void func_80021C78(void) {
+     func_8006E848(gPlayerTwo, 1, 1);
+     func_8006E848(gPlayerThree, 2, 1);
+     func_8006E848(gPlayerFour, 3, 1);
+-    if (gActiveScreenMode != SCREEN_MODE_3P_4P_SPLITSCREEN) {
++    if ((gActiveScreenMode != SCREEN_MODE_3P_4P_SPLITSCREEN) || psy_cpu_racers_active()) {
+         func_8006E848(gPlayerFive, 4, 1);
+         func_8006E848(gPlayerSix, 5, 1);
+         func_8006E848(gPlayerSeven, 6, 1);
+@@ -585,6 +590,12 @@ void func_80021D40(void) {
+     func_8006E8C4(gPlayerTwo, 1, 2);
+     func_8006E8C4(gPlayerThree, 2, 2);
+     func_8006E8C4(gPlayerFour, 3, 2);
++    if (psy_cpu_racers_active()) {
++        func_8006E8C4(gPlayerFive, 4, 2);
++        func_8006E8C4(gPlayerSix, 5, 2);
++        func_8006E8C4(gPlayerSeven, 6, 2);
++        func_8006E8C4(gPlayerEight, 7, 2);
++    }
+ }
+ 
+ void func_80021DA8(void) {
+@@ -592,6 +603,12 @@ void func_80021DA8(void) {
+     func_8006E940(gPlayerTwo, 1, 3);
+     func_8006E940(gPlayerThree, 2, 3);
+     func_8006E940(gPlayerFour, 3, 3);
++    if (psy_cpu_racers_active()) {
++        func_8006E940(gPlayerFive, 4, 3);
++        func_8006E940(gPlayerSix, 5, 3);
++        func_8006E940(gPlayerSeven, 6, 3);
++        func_8006E940(gPlayerEight, 7, 3);
++    }
+ }
+ 
+ void mtxf_translate_rotate(Mat4 dest, Vec3f pos, Vec3s orientation) {
+@@ -1345,12 +1362,12 @@ void render_kart(Player* player, s8 playerId, s8 screenId, s8 flipOffset) {
+     load_kart_palette(player, playerId, screenId, D_801651D0[screenId][playerId]);
+     gPlayerPalette = &gPlayerPalettesList[D_801651D0[screenId][playerId]][screenId][playerId];
+     // When screenId >= 2 (in 3/4 player mode), adjust indices to fit gEncodedKartTexture[2][2][8] dimensions
+-    if ((screenId == 0) || (screenId == 1)) {
++    if ((screenId == 0) || (screenId == 1) || psy_cpu_racers_active()) {
+         load_kart_texture(player, playerId, screenId, screenId, D_801651D0[screenId][playerId]);
+     } else {
+         load_kart_texture(player, playerId - 4, screenId, screenId - 1, D_801651D0[screenId][playerId]);
+     }
+-    if ((screenId == 0) || (screenId == 1)) {
++    if ((screenId == 0) || (screenId == 1) || psy_cpu_racers_active()) {
+         sKartTexture = gEncodedKartTexture[D_801651D0[screenId][playerId]][screenId][playerId].unk_00;
+     } else {
+         sKartTexture = gEncodedKartTexture[D_801651D0[screenId][playerId]][screenId - 1][playerId - 4].unk_00;
+@@ -1460,7 +1477,7 @@ void render_ghost(Player* player, s8 playerId, s8 screenId, s8 flipOffset) {
+     gPlayerPalette =
+         (struct_D_802F1F80*) &gPlayerPalettesList[D_801651D0[screenId][playerId]][screenId][playerId * 0x100];
+ #endif
+-    if ((screenId == 0) || (screenId == 1)) {
++    if ((screenId == 0) || (screenId == 1) || psy_cpu_racers_active()) {
+         sKartTexture = gEncodedKartTexture[D_801651D0[screenId][playerId]][screenId][playerId].unk_00;
+     } else {
+         sKartTexture = gEncodedKartTexture[D_801651D0[screenId][playerId]][screenId - 1][playerId - 4].unk_00;
+diff --git a/src/spawn_players.c b/src/spawn_players.c
+index a5e5d73..14e2c89 100644
+--- a/src/spawn_players.c
++++ b/src/spawn_players.c
+@@ -38,6 +38,44 @@ f32 gPlayerWaterLevel[8];
+ s32 D_801652C0[8];
+ s32 D_801652E0[8];
+ s16 D_80165300[8];
++
++// Psymatic: fill the empty 3P/4P versus slots with CPU racers (CVar gPsyCpuRacers, default off).
++// Latched at spawn so a menu change mid-race cannot desync spawning, ranking and rendering.
++static s32 sPsyCpuRacers = 0;
++
++s32 psy_cpu_racers_active(void) {
++    return sPsyCpuRacers && (gModeSelection == VERSUS) && (gPlayerCountSelection1 >= 3);
++}
++
++static void psy_spawn_cpu_racers(f32* arg0, f32* arg1, f32 arg2) {
++    s32 used[NUM_PLAYERS] = { 0 };
++    s32 pool[NUM_PLAYERS];
++    s32 poolCount = 0;
++    s32 character;
++    s32 pick;
++    s32 slot;
++    s32 i;
++
++    for (i = 0; i < gPlayerCountSelection1; i++) {
++        used[gCharacterSelections[i]] = 1;
++    }
++    for (i = 0; i < NUM_PLAYERS; i++) {
++        if (!used[i]) {
++            pool[poolCount++] = i;
++        }
++    }
++    for (slot = gPlayerCountSelection1; slot < NUM_PLAYERS; slot++) {
++        if (poolCount > 0) {
++            pick = random_int(poolCount);
++            character = pool[pick];
++            pool[pick] = pool[--poolCount];
++        } else {
++            character = random_int(NUM_PLAYERS);
++        }
++        spawn_player(&gPlayers[slot], slot, arg0[slot], arg1[slot], arg2, 32768.0f, character,
++                     PLAYER_EXISTS | PLAYER_CPU | PLAYER_START_SEQUENCE);
++    }
++}
+ // Shadows values from gPathIndexByPlayerId, but is an array
+ u16 gCopyPathIndexByPlayerId[8];
+ // Shadows values from gNearestPathPointByPlayerId, but is an array
+@@ -773,6 +811,9 @@ void func_8003B318(f32* arg0, f32* arg1, f32 arg2) {
+     spawn_player(gPlayerSix, 5, arg0[5], arg1[5], arg2, 32768.0f, 5, PLAYER_START_SEQUENCE | PLAYER_CPU);
+     spawn_player(gPlayerSeven, 6, arg0[6], arg1[6], arg2, 32768.0f, 6, PLAYER_START_SEQUENCE | PLAYER_CPU);
+     spawn_player(gPlayerEight, 7, arg0[0], arg1[0], arg2, 32768.0f, 7, PLAYER_START_SEQUENCE | PLAYER_CPU);
++    if (psy_cpu_racers_active()) {
++        psy_spawn_cpu_racers(arg0, arg1, arg2);
++    }
+     D_80164A28 = 0;
+     func_80039AE4();
+ }
+@@ -821,6 +862,9 @@ void func_8003B870(f32* arg0, f32* arg1, f32 arg2) {
+     spawn_player(gPlayerSix, 5, arg0[5], arg1[5], arg2, 32768.0f, 5, PLAYER_START_SEQUENCE | PLAYER_CPU);
+     spawn_player(gPlayerSeven, 6, arg0[6], arg1[6], arg2, 32768.0f, 6, PLAYER_START_SEQUENCE | PLAYER_CPU);
+     spawn_player(gPlayerEight, 7, arg0[0], arg1[0], arg2, 32768.0f, 7, PLAYER_START_SEQUENCE | PLAYER_CPU);
++    if (psy_cpu_racers_active()) {
++        psy_spawn_cpu_racers(arg0, arg1, arg2);
++    }
+     D_80164A28 = 0;
+     func_80039AE4();
+ }
+@@ -989,6 +1033,15 @@ void spawn_and_set_player_spawns(void) {
+                         D_80165230[5] = sp5C + 0x1E;
+                         D_80165230[6] = sp5C + 0x1E;
+                         D_80165230[7] = sp5C + 0x1E;
++                        sPsyCpuRacers = (CVarGetInteger("gPsyCpuRacers", 0) == 1);
++                        if (psy_cpu_racers_active()) {
++                            // Second grid row behind the humans for CPU slots 5-8
++                            D_80165210[4] = sp5E + 0x1E;
++                            D_80165210[5] = sp5E + 0xA;
++                            D_80165210[6] = sp5E - 0xA;
++                            D_80165210[7] = sp5E - 0x1E;
++                            D_80165230[4] = D_80165230[5] = D_80165230[6] = D_80165230[7] = sp5C + 0x46;
++                        }
+                         if (gPlayerCountSelection1 == 4) {
+                             func_8003B870(D_80165210, D_80165230, sp5A);
+                         } else {
+@@ -1171,6 +1224,10 @@ void func_8003CD98(Player* player, Camera* camera, s8 playerId, s8 screenId) {
+             mio0decode((u8*) &gEncodedKartTexture[0][screenId][playerId],
+                        (u8*) &D_802BFB80.arraySize8[0][screenId][playerId]);
+ #endif
++        } else if (psy_cpu_racers_active()) {
++            load_kart_palette(player, playerId, screenId, 0);
++            load_kart_palette(player, playerId, screenId, 1);
++            load_kart_texture(player, playerId, screenId, screenId, 0);
+         } else {
+             load_kart_palette(player, playerId, screenId, 0);
+             load_kart_palette(player, playerId, screenId, 1);
+@@ -1365,7 +1422,7 @@ void load_kart_textures(void) {
+ 
+     static const size_t playerCounts[4] = { 8, 8, 4, 4 };
+     for (size_t i = 0; i < screens; i++) {
+-        for (size_t ply = 0; ply < playerCounts[gPlayerCountSelection1 - 1]; ply++) {
++        for (size_t ply = 0; ply < (psy_cpu_racers_active() ? NUM_PLAYERS : playerCounts[gPlayerCountSelection1 - 1]); ply++) {
+             func_8003CD98(&gPlayers[ply], gScreenContexts[i].camera, ply, i);
+         }
+     }
+diff --git a/src/spawn_players.h b/src/spawn_players.h
+index 665a369..fb53c68 100644
+--- a/src/spawn_players.h
++++ b/src/spawn_players.h
+@@ -28,6 +28,7 @@ void spawn_single_player_camera(u32 mode);
+ void spawn_multiplayer_cameras(u32 mode);
+ void load_kart_textures(void);
+ void func_8003DB5C(void);
++s32 psy_cpu_racers_active(void);
+ 
+ extern f32 D_80165210[];
+ extern f32 D_80165230[];
+-- 
+2.39.5 (Apple Git-154)
+
