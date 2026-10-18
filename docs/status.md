@@ -61,7 +61,9 @@ Last updated: 2026-10-18 (Code session on the M1 laptop: setup, patches, playtes
 - Pad re-pair changes player number. Likely cause: both pads report the
   same VID/PID/serial, so on reconnect a game can only order them by
   connection time. Lead to audit: the HID device path encodes the USB
-  port, which could pin pad N to the physical socket N. Also check
+  port, which could pin pad N to the physical socket N. User observed
+  (2026-10-18) that each pad reliably wakes on the same USB socket, which
+  supports this approach. Also check
   whether the pads' sleep timer can be held off by host output reports.
 - Mario Kart 64: early experiment, 4 humans + AI opponents in Grand Prix
   (already the brief's first target).
