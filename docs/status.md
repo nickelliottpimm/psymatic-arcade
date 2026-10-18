@@ -1,6 +1,6 @@
 # Status
 
-Last updated: 2026-10-17 (Code session on the M1 laptop: setup, patches, playtests)
+Last updated: 2026-10-18 (Code session on the M1 laptop: setup, patches, playtests)
 
 ## Done
 
@@ -39,9 +39,9 @@ Last updated: 2026-10-17 (Code session on the M1 laptop: setup, patches, playtes
   the user, plus their choice of GitHub account. Until then the patches
   live in local clones and `ports/pending-patches/`.
 - SpaghettiKart still has no license. Do not fork until that is resolved.
-- PD and GE-X with the new N64 pad layout (`tools/pads/pd_n64pads.py`:
-  SwapSticks=0, StickCButtons=1, Z fire, R aim) are not yet playtested.
-- GE-X multiplayer menu flow is not yet walked through on screen.
+- GE-X Virtual Reality runs with 4 players and the N64 pad layout plus
+  control style 1.1 (`ExtendedControls=0`). Plain Perfect Dark with the
+  same layout is not yet playtested.
 - SpaghettiKart's per-port pad assignment resets each launch (libultraship
   keeps the ignore list in memory only).
 - goldeneye-pc-port was not attempted (GoldenEye Native works). Decision
@@ -49,9 +49,7 @@ Last updated: 2026-10-17 (Code session on the M1 laptop: setup, patches, playtes
 
 ## Next
 
-1. Playtest PD and GE-X 2P with the new pad layout. To walk through
-   GE-X's "Virtual Reality" menus, Claude can screenshot the CRT with
-   `screencapture -x -D 2`.
+1. Playtest plain Perfect Dark 2P with the new pad layout and style 1.1.
 2. Install `gh`, log in, choose the account, then fork the three ports,
    push `psymatic/stretch43`, and add them as submodules under `ports/`.
 3. Decide whether to post the upstream drafts.
