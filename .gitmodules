@@ -1,0 +1,12 @@
+[submodule "ports/goldeneye-native"]
+	path = ports/goldeneye-native
+	url = https://github.com/nickelliottpimm/goldeneye-native.git
+	branch = psymatic/stretch43
+[submodule "ports/perfect_dark"]
+	path = ports/perfect_dark
+	url = https://github.com/nickelliottpimm/perfect_dark.git
+	branch = psymatic/stretch43
+[submodule "ports/perfect-dark-dabs-mod"]
+	path = ports/perfect-dark-dabs-mod
+	url = https://github.com/nickelliottpimm/perfect-dark-dabs-mod.git
+	branch = psymatic/stretch43

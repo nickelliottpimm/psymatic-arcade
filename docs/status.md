@@ -29,15 +29,17 @@ Last updated: 2026-10-18 (Code session on the M1 laptop: setup, patches, playtes
 - Pad drift: root cause was an SDL 2.30.9 calibration bug. GoldenEye, PD
   and Dab's Mod now use SDL 2.32.10. Details in `docs/findings.md`
   ("Controllers").
-- All port changes are exported to `ports/pending-patches/` (9 commits).
+- Forks under github.com/nickelliottpimm, branch `psymatic/stretch43`,
+  added as submodules: `ports/goldeneye-native`, `ports/perfect_dark`,
+  `ports/perfect-dark-dabs-mod` (2026-10-18). The local build clones in
+  `~/PsymaticArcade-Apps` have the fork as remote `fork`. `gh` is logged
+  in as nickelliottpimm with `repo` and `workflow` scopes.
+  `ports/pending-patches/` keeps the same 9 commits as patch files.
   Pad and display diagnostic tools are in `tools/pads/`. Upstream bug
   report drafts are in `docs/upstream-drafts/`.
 
 ## Blocked / unknown
 
-- No forks or submodules yet. This needs `gh` installed and logged in by
-  the user, plus their choice of GitHub account. Until then the patches
-  live in local clones and `ports/pending-patches/`.
 - SpaghettiKart still has no license. Do not fork until that is resolved.
 - GE-X Virtual Reality runs with 4 players and the N64 pad layout plus
   control style 1.1 (`ExtendedControls=0`). Plain Perfect Dark with the
@@ -50,11 +52,9 @@ Last updated: 2026-10-18 (Code session on the M1 laptop: setup, patches, playtes
 ## Next
 
 1. Playtest plain Perfect Dark 2P with the new pad layout and style 1.1.
-2. Install `gh`, log in, choose the account, then fork the three ports,
-   push `psymatic/stretch43`, and add them as submodules under `ports/`.
-3. Decide whether to post the upstream drafts.
-4. Write playtest observations into `docs/playtest-notes.md`.
-5. Then: the quadrant menu mirror and the 4P layout work from the brief.
+2. Decide whether to post the upstream drafts.
+3. Write playtest observations into `docs/playtest-notes.md`.
+4. Then: the quadrant menu mirror and the 4P layout work from the brief.
 
 ## Ideas from the user (2026-10-18), not started
 
