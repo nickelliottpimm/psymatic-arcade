@@ -2,7 +2,7 @@
 Switch Pro). Measured with tools/padtest: A=a B=b Z=lefttrigger L/R=shoulders
 start=start, C buttons on the right stick, d-pad, main stick = left stick.
 
-Per player: SwapSticks=0 (N64 stick = physical left stick), StickCButtons=1 (right stick
+Per player: ExtendedControls=0 (control style 1.1), SwapSticks=0 (N64 stick = physical left stick), StickCButtons=1 (right stick
 -> digital C buttons), and pad binds that map each N64 button to itself. Keyboard and
 mouse binds are kept. Usage: python3 -I pd_n64pads.py <pd.ini>"""
 import re, sys
@@ -23,6 +23,10 @@ def main(path):
             sec = m.group(1)
             out.append(line)
             continue
+        # ExtendedControls=1 forces CONTROLMODE_PC (C buttons move, stick looks) and
+        # overrides the in-game style; 0 leaves the N64 default 1.1 (mplayer.c:438).
+        if re.match(r'^Game\.Player[1-4]$', sec or '') and line == 'ExtendedControls=1':
+            line = 'ExtendedControls=0'
         pm = re.match(r'^Input\.Player([1-4])(\.Binds)?$', sec or '')
         if pm and '=' in line:
             n, binds = pm.group(1), pm.group(2)

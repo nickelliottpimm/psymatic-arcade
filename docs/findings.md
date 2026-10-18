@@ -416,3 +416,13 @@ branch and not yet pushed or forked.
   passes `--moddir "mods/GE-X_6a_01-19-25"` to boot straight into GE-X.
   Lesson: read the README that ships in the release tarball, not the
   branch head.
+
+## PD / GE-X control style (2026-10-18)
+
+`Game.PlayerN.ExtendedControls=1` in pd.ini forces `CONTROLMODE_PC` at
+every profile load (`src/game/mplayer/mplayer.c:440`, `:3522`;
+`src/game/gamefile.c:170`, `:345`), overriding the in-game style. On our
+N64 pads that reads as "C buttons move, stick looks", and Combat Sim /
+Virtual Reality has no menu to change it. Set to 0 for all four players
+in both pd.ini files; mode then defaults to 1.1 (`mplayer.c:438`).
+`tools/pads/pd_n64pads.py` now does this too. Not yet playtested.
