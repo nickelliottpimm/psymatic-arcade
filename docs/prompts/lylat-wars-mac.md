@@ -10,12 +10,11 @@ Goal: get Star Fox 64 running on this Mac with HarbourMasters/Starship, stretche
 to fill the 16:9 output, and find out whether 4-player versus works. Small steps.
 Tell me plainly what you are doing.
 
-1. ROM: the file is on the mounted share at
-   /Volumes/01_PRODUCTION/01_PROJECTS/Psymatic2000/04_Gaming/2026_PsymaticArcade/ROMs/Star Fox 64 (USA) (Rev 1).z64
-   Copy it to ~/PsymaticArcade-ROMs (outside the repo). Check the first four
-   bytes are 80 37 12 40 and the SHA-1 is 09f0d105f476b00efa5303a3ebc42e60a7753b7a.
-   Report both. If the share is not mounted, tell me to connect in Finder and
-   wait. Never type passwords. Never commit a ROM.
+1. ROM: it is already at
+   /Users/nickelliottpimm/PsymaticArcade-ROMs/Star Fox 64 (USA) (Rev 1).z64
+   Do not copy it anywhere. Check the first four bytes are 80 37 12 40 and the
+   SHA-1 is 09f0d105f476b00efa5303a3ebc42e60a7753b7a. Report both. Never commit a
+   ROM.
 2. Check the Starship releases page for a macOS arm64 build. Report the exact
    version and file name. If there is one, install it under
    ~/PsymaticArcade-Apps/starship and use it. If not, tell me before building
