@@ -1,6 +1,30 @@
 # Status
 
-Last updated: 2026-10-18 (Code session on the M1 laptop: setup, patches, playtests)
+Last updated: 2026-11-08 (chat thread: Pi handover and Lylat Wars proposal added on top of the 2026-10-18 Mac session below)
+
+## Added 2026-11-08 (chat thread, nothing built)
+
+- Pi handover written: `docs/handover/pi-handover.md`, start prompt in
+  `docs/prompts/pi-setup.md`, decision 0003 (proposed). Open questions for
+  Zooey are in handover section 8 (Pi model and RAM, cooling, storage, which
+  games, ROM transfer).
+- Lylat Wars (Star Fox 64) proposed as game 5 via HarbourMasters/Starship:
+  decision 0004 (proposed). CC0 license, same stretch setting as MK64, needs a
+  US ROM (US 1.0 or 1.1, .z64). No Star Fox 64 ROM has been confirmed in the
+  share yet. Not set up.
+- Pi facts so far are repo reads only: no performance numbers exist for any
+  port on any Pi. PD and Dab's Mod list no Linux arm64 build; GoldenEye Native
+  lists Linux arm64 but says Linux is unplayed.
+
+## Next (updated 2026-11-08)
+
+1. Zooey answers the handover section 8 questions, then the Pi session starts
+   with `docs/prompts/pi-setup.md`.
+2. In parallel, on the Mac, time-boxed: check for a Star Fox 64 US ROM, run
+   Starship, try `IgnoreAspectCorrection`, test 4P versus with four pads.
+3. The older list below still applies to the Mac work.
+
+## Earlier session (2026-10-18, Code session on the M1 laptop: setup, patches, playtests)
 
 ## Done
 

@@ -478,3 +478,25 @@ at `~/PsymaticArcade-Apps/src/spaghettikart`. Audit only, nothing built.
   release binary (static SDL 2.30.9). Watch pad behaviour.
 - Installed at `~/PsymaticArcade-Apps/spaghettikart-cpu` with the toggle
   on; launcher `1b Mario Kart 64 + CPU Racers (test).command`.
+
+## Checked from source (2026-11-08, cloud session, not build-tested)
+
+Starship (HarbourMasters/Starship), shallow clone at `3322643` (2026-09-15):
+- License CC0 1.0 (`LICENSE.md`). libultraship pinned at `eaaf9d0`.
+- `gAdvancedResolution.IgnoreAspectCorrection` exists
+  (`src/port/ui/ResolutionEditor.cpp:297-308`), the same setting that gives
+  the 4:3 stretch in SpaghettiKart.
+- ROMs: US 1.0 and US 1.1 only, `.z64`. SHA-1 `d8b1088520f7c5f81433292a9258c1184afa1457`
+  and `09f0d105f476b00efa5303a3ebc42e60a7753b7a`
+  (`src/port/extractor/GameExtractor.cpp:13-15`, `config.yml:4,34`).
+- CMake aarch64 branch: `CMakeLists.txt:569-570` (`-mcpu=native`).
+- Linux apt deps: `docs/BUILDING.md:89`.
+- Release assets were not checked (API access to the repo was not available).
+
+Linux/ARM support claims in our submodules (READMEs):
+- goldeneye-native `README.md:160`: Linux x86-64 and arm64, "Builds. Verified
+  on Debian 12 aarch64." `:383`: "Linux is unplayed."
+- perfect_dark `README.md:40-42`: Linux i686 and x86_64 only; `:200` other
+  platforms untested.
+- perfect-dark-dabs-mod `README.md:40`: Linux release is `pd.x86_64`.
+- No Pi performance numbers found for any port.
