@@ -30,8 +30,13 @@ the Pi brief. Do not make the Pi work wait for it.
 - 4-player versus: the decomp has `src/engine/fox_versus.c`. Whether the port
   plays 4P versus with four pads is UNVERIFIED.
 
+## ROM (2026-11-08)
+
+Zooey confirmed the ROM is in the share: `Star Fox 64 (USA) (Rev 1).z64`.
+"Rev 1" should be US 1.1, which Starship supports. Not hash-checked yet; the
+SHA-1 should be `09f0d105f476b00efa5303a3ebc42e60a7753b7a`. It is `.z64`
+byte order by extension; confirm the first four bytes are `80 37 12 40`.
+
 ## Open
 
-- Is there a Star Fox 64 US ROM in the share? It was not in the three ROMs
-  copied so far.
 - 4P versus with four pads, on the wall.

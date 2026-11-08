@@ -12,6 +12,9 @@ Last updated: 2026-11-08 (chat thread: Pi handover and Lylat Wars proposal added
   decision 0004 (proposed). CC0 license, same stretch setting as MK64, needs a
   US ROM (US 1.0 or 1.1, .z64). No Star Fox 64 ROM has been confirmed in the
   share yet. Not set up.
+- Pi confirmed: Raspberry Pi 4 Model B, 4 GB, bare board. The Star Fox 64 US
+  ROM (`Star Fox 64 (USA) (Rev 1).z64`) is in the share; not copied or hash-checked.
+  Mac test prompt: `docs/prompts/lylat-wars-mac.md`.
 - Pi facts so far are repo reads only: no performance numbers exist for any
   port on any Pi. PD and Dab's Mod list no Linux arm64 build; GoldenEye Native
   lists Linux arm64 but says Linux is unplayed.

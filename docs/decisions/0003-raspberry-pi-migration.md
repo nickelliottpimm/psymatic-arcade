@@ -1,12 +1,17 @@
 # 0003 Raspberry Pi as an event host
 
 Date: 2026-11-08
-Status: proposed. Needs Zooey's answers in `docs/handover/pi-handover.md` section 8.
+Status: proposed. Hardware known; remaining answers in `docs/handover/pi-handover.md` section 8.
 
 ## Decision
 
 Start a separate Pi setup effort, briefed by `docs/handover/pi-handover.md`.
 Mario Kart 64 goes first. The other games follow only if the Pi measures well.
+
+## Hardware (confirmed 2026-11-08)
+
+Raspberry Pi 4 Model B, 4 GB, bare board, dual micro-HDMI. Cooling, power
+supply and storage are still open.
 
 ## Why
 

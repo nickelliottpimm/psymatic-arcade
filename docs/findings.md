@@ -500,3 +500,11 @@ Linux/ARM support claims in our submodules (READMEs):
   platforms untested.
 - perfect-dark-dabs-mod `README.md:40`: Linux release is `pd.x86_64`.
 - No Pi performance numbers found for any port.
+
+## Pi 4 GPU requirements, from source (2026-11-08, not run on a Pi)
+- Perfect Dark port README:75: "A GPU supporting OpenGL 3.0/ES3.0 or above is
+  required." Context list tried in order at `port/fast3d/gfx_sdl2.cpp:163-167`
+  (GL 3.0 compat, 4.1 core, 3.2 core, ES 3.0, 2.1). Dab's Mod: same list,
+  `port/fast3d/gfx_sdl2.cpp:208-212`. GLSL 130 minimum
+  (`gfx_opengl.cpp:62`).
+- Pi 4 GL/GLES versions: not yet measured. Record `eglinfo` output on the Pi.

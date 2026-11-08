@@ -12,8 +12,9 @@ Mario Kart 64 only. Nothing has been built or run on a Pi yet; treat anything
 marked UNVERIFIED in the handover as a test, not a fact.
 
 Step 0, before building anything:
-- Tell me the Pi model, RAM, OS and version, kernel, Mesa version, and
-  `sdl2-config --version`. Record them in docs/findings.md.
+- The Pi is a Raspberry Pi 4 Model B, 4 GB, bare board. Tell me the OS and
+  version, kernel, Mesa version, GL and GLES versions (`eglinfo` or
+  `glxinfo -B`), and `sdl2-config --version`. Record them in docs/findings.md.
 - Check .gitignore excludes ROMs. Never commit a ROM.
 - Ask me the open questions in handover section 8 that you cannot answer
   yourself. Ask them all at once.

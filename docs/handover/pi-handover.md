@@ -15,6 +15,9 @@ driving the same wall: one 16:9 HDMI output, a 2x2 splitter, four RF
 modulators, four 4:3 CRTs. Each quadrant must be a 4:3 image stretched
 horizontally by 4/3 to 16:9 (see `CLAUDE.md`, "Output geometry").
 
+The Pi is a **Raspberry Pi 4 Model B, 4 GB**, bare board (no case), 1.5 GHz
+quad-core, dual micro-HDMI (confirmed by Zooey 2026-11-08).
+
 Decision 0001 said lighter games (Mario Kart 64) go on a Pi and heavier
 builds go on the M1 Max Mac Studio. That is still the plan unless the tests
 below say otherwise. Do not assume all games will fit on the Pi.
@@ -62,6 +65,25 @@ Read from the repos on 2026-11-08. No Pi has been tested.
   its `docs/BUILDING.md` for Linux.
 - **No performance numbers for any of these on any Pi.** I searched and
   found none. That is the first thing to measure.
+
+### What a Pi 4 with 4 GB means
+
+- **GPU API is probably not the blocker.** The Perfect Dark port needs
+  "OpenGL 3.0/ES3.0 or above" (`ports/perfect_dark/README.md:75`). Its window
+  code tries GL 3.0 compatibility, then 4.1 core, 3.2 core, ES 3.0, then 2.1
+  (`port/fast3d/gfx_sdl2.cpp:163-167`; Dab's Mod has the same list at
+  `:208-212`). As far as I know the Pi 4's Mesa driver offers GLES 3.1 and GL
+  3.x. UNVERIFIED: confirm with `eglinfo` or `glxinfo -B` and record it. Speed,
+  not the API version, is the open question.
+- **Expectation.** Mario Kart 64 is the only realistic first target. Four
+  players on Perfect Dark, GoldenEye X or GoldenEye Native on a Pi 4 is a long
+  shot. Run them as experiments, report the numbers, and do not promise them.
+- **Building on 4 GB can run out of memory.** Use a low job count (for example
+  `-j2`) and add swap if the compiler gets killed. The Mac builds cannot be
+  reused: they are macOS arm64, not Linux.
+- **Bare board.** Without a heatsink or fan a Pi 4 throttles under sustained
+  load, and an under-spec power supply causes under-voltage. Record both
+  (section 9).
 
 ## 4. Things that are Mac-only and must be replaced
 
@@ -154,13 +176,15 @@ touch more than a couple of files.
 8. Launcher and kiosk behaviour: boots straight to a choice of game, quit
    returns to it. Only after the games run.
 
-## 8. Questions for Zooey before starting
+## 8. Hardware and open questions
 
-These are not in any repo yet.
+Answered by Zooey (2026-11-08):
+- Pi 4 Model B, 4 GB, bare board, 1.5 GHz quad-core, dual micro-HDMI.
 
-- Which Pi: 4 or 5, and how much RAM? (Decision 0001 said Pi 4 is a
-  candidate and unproven. A Pi 5 is the safer bet if you are buying.)
-- Cooling and case, power supply, and storage (microSD or SSD).
+Still open (the Pi session should ask these in one go):
+- Cooling (heatsink or fan, case) and power supply (the Pi 4 wants a 5 V 3 A
+  USB-C supply).
+- Storage: microSD or USB SSD.
 - Does the Pi replace the Mac for events, or run alongside it?
 - Which games must run on the Pi, and which can stay on the Mac Studio?
 - How will ROMs get onto it?
@@ -192,7 +216,8 @@ For each game, at 1920x1080 @ 60 Hz output, record in `docs/findings.md`:
 
 ## 11. Lylat Wars (Star Fox 64)
 
-Proposed as game 5. Not set up. See `docs/decisions/0004-lylat-wars-starship.md`.
+Proposed as game 5. Not set up. The US ROM is in the share:
+`Star Fox 64 (USA) (Rev 1).z64` (should be US 1.1; check the SHA-1). See `docs/decisions/0004-lylat-wars-starship.md`.
 For the Pi: Starship's CMake already has an aarch64 branch
 (`HarbourMasters/Starship CMakeLists.txt:569-570`, `-mcpu=native`), but that is
 not proof it runs on a Pi. Do the Mac test first, then try it on the Pi last.
