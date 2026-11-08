@@ -1,6 +1,14 @@
 # Status
 
-Last updated: 2026-11-08 (chat thread: Pi handover and Lylat Wars proposal added on top of the 2026-10-18 Mac session below)
+Last updated: 2026-11-08 (cloud session tried the Lylat Wars Mac test, see below; chat thread: Pi handover and Lylat Wars proposal added on top of the 2026-10-18 Mac session below)
+
+## Lylat Wars Mac test: not done (2026-11-08, cloud session)
+
+The prompt was run in a Linux cloud container, not on the Mac, so the ROM,
+Starship, pads and versus steps were not attempted. Only finding: Starship
+has tags `v1.0.0` and `v2.0.0`; release asset names are unchecked. Details in
+`docs/findings.md`. No launcher yet. Re-run `docs/prompts/lylat-wars-mac.md`
+in Claude Code on the Mac.
 
 ## Added 2026-11-08 (chat thread, nothing built)
 

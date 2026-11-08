@@ -508,3 +508,23 @@ Linux/ARM support claims in our submodules (READMEs):
   `port/fast3d/gfx_sdl2.cpp:208-212`. GLSL 130 minimum
   (`gfx_opengl.cpp:62`).
 - Pi 4 GL/GLES versions: not yet measured. Record `eglinfo` output on the Pi.
+
+## Lylat Wars / Starship: Mac test attempt (2026-11-08, cloud session, NOT on the Mac)
+
+The session ran in a Linux cloud container. `/Users/nickelliottpimm/PsymaticArcade-ROMs`
+does not exist there (`ls` returned "No such file or directory"). Nothing below
+was run on the Mac.
+
+NOT DONE, needs the Mac: ROM first-four-bytes and SHA-1 check, install, run,
+`IgnoreAspectCorrection`, pad order, 4P versus. No numbers exist for any of them.
+
+Releases (step 2), partly checked:
+- `git ls-remote --tags https://github.com/HarbourMasters/starship` returns
+  only two tags: `v1.0.0` (`486cdfc`) and `v2.0.0` (`cb19785`).
+- Release asset file names (whether a macOS arm64 build exists) are UNVERIFIED.
+  The GitHub API is not reachable from this session without attaching the repo
+  with push credentials, which was not requested. Check
+  https://github.com/HarbourMasters/Starship/releases by hand, or run
+  `gh release view v2.0.0 --repo HarbourMasters/Starship --json assets` on the Mac.
+- No launcher written: binary name and install path are unknown until an
+  install exists.
